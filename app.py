@@ -1,5 +1,5 @@
 import streamlit as st
-import fitz  # PyMuPDF
+from PyMuPDF import fitz  # PyMuPDF
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 from deep_translator import GoogleTranslator
 from fpdf import FPDF
