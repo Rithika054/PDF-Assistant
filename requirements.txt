@@ -1,10 +1,13 @@
-streamlit
-PyMuPDF
-transformers
-keybert
-deep-translator
-fpdf
 httpx>=0.23.0
 httpcore
+sentencepiece
+streamlit
+PyMuPDF
+keybert
+transformers
+deep-translator
+fpdf
+googletrans==4.0.0rc1
+torch
 sentencepiece
 
