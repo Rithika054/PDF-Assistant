@@ -1,8 +1,10 @@
 streamlit
-pymupdf
+PyMuPDF
 transformers
-torch
-sentencepiece
+keybert
 deep-translator
-fpdf2
+fpdf
+httpx==0.21.1
+httpcore==0.14.7
+sentencepiece
 fitz
