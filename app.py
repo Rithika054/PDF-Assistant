@@ -51,21 +51,19 @@ def answer_question(context, question, qa_model):
 # Function to generate MCQs from the document
 @st.cache_resource
 def load_mcq_generator():
-    model_name = "valhalla/t5-base-qa-qg-hl"
+    model_name = "distilgpt2"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
     return tokenizer, model
 
 def generate_mcqs(text, tokenizer, model, num_questions=5):
-    num_beams = max(num_questions, 5)  # Ensure num_beams is at least as large as num_questions
-    input_text = f"generate questions: {text}"
-    inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)
-    outputs = model.generate(inputs, max_length=512, num_beams=num_beams, early_stopping=True, num_return_sequences=num_questions)
-    
+    inputs = tokenizer.encode(text, return_tensors="pt")
+    outputs = model.generate(inputs, max_length=150, num_return_sequences=num_questions, do_sample=True)
+
     questions = []
     for output in outputs:
         decoded_output = tokenizer.decode(output, skip_special_tokens=True)
-        questions.append(decoded_output)
+        questions.append(decoded_output.split("?")[0] + "?")  # Assuming questions end with "?"
 
     return questions
 
