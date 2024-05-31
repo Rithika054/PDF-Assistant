@@ -56,12 +56,12 @@ def load_mcq_generator():
 def generate_mcqs(text, tokenizer, model, num_questions=5):
     num_beams = max(num_questions, 5)  # Ensure num_beams is at least as large as num_questions
     input_text = f"generate questions: {text}"
-    inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True,legacy=False)
+    inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)
     outputs = model.generate(inputs, max_length=512, num_beams=num_beams, early_stopping=True, num_return_sequences=num_questions)
     
     questions = []
     for output in outputs:
-        decoded_output = tokenizer.decode(output, skip_special_tokens=True)
+        decoded_output = tokenizer.decode(output, skip_special_tokens=True,,legacy=False)
         questions.append(decoded_output)
 
     return questions
