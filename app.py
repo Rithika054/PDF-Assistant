@@ -45,7 +45,7 @@ def answer_question(context, question, qa_model):
 @st.cache_resource
 def load_mcq_generator():
     model_name = "valhalla/t5-base-qa-qg-hl"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, legacy=False)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     return tokenizer, model
 
