@@ -104,7 +104,7 @@ def get_download_link(file_path, text):
 
 # Streamlit sidebar
 st.sidebar.title("PDF Processing App")
-option = st.sidebar.selectbox("Choose an option", ("Summarizer", "Translator", "Question Answering Bot", "MCQ Generator"))
+option = st.sidebar.selectbox("Choose an option", ("Summarizer", "Translator", "Question Answering Bot"))
 
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
@@ -178,5 +178,5 @@ if uploaded_file:
     #         # Provide a download link for the new PDF
     #         with open(output_pdf_path, "rb") as f:
     #             st.download_button("Download MCQ PDF", f, file_name=output_pdf_path, mime="application/pdf")
-        else:
-            st.write("No MCQs generated.")
+        # else:
+        #     st.write("No MCQs generated.")
