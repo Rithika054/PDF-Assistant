@@ -1,6 +1,6 @@
 import streamlit as st
 import fitz  # PyMuPDF
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM,AutoModelForCausalLM
+from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
 from fpdf import FPDF
 import tempfile
 import os
@@ -48,7 +48,7 @@ def answer_question(context, question, qa_model):
     answer = qa_model(question=question, context=context)
     return answer['answer']
 
-# Function to generate MCQs from the document
+# Function to generate MCQs from the document using a smaller model
 @st.cache_resource
 def load_mcq_generator():
     model_name = "distilgpt2"
@@ -57,13 +57,14 @@ def load_mcq_generator():
     return tokenizer, model
 
 def generate_mcqs(text, tokenizer, model, num_questions=5):
-    inputs = tokenizer.encode(text, return_tensors="pt")
-    outputs = model.generate(inputs, max_length=150, num_return_sequences=num_questions, do_sample=True)
+    inputs = tokenizer.encode(text, return_tensors="pt", truncation=True, max_length=512)  # truncate input if too long
+    outputs = model.generate(inputs, max_new_tokens=50, num_return_sequences=num_questions, do_sample=True)
 
     questions = []
     for output in outputs:
         decoded_output = tokenizer.decode(output, skip_special_tokens=True)
-        questions.append(decoded_output.split("?")[0] + "?")  # Assuming questions end with "?"
+        question = decoded_output.split("?")[0] + "?"  # Assuming questions end with "?"
+        questions.append(question.strip())
 
     return questions
 
@@ -103,87 +104,104 @@ def get_download_link(file_path, text):
 
 # Streamlit sidebar
 st.sidebar.title("PDF Processing App")
-option = st.sidebar.selectbox("Choose an option", ("Summarizer", "Translator", "Question Answering Bot", "MCQ Generator"))
+option = st.sidebar.selectbox("Choose an option",
+                              ("Summarizer", "Translator", "Question Answering Bot", "MCQ Generator"))
 
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 if uploaded_file:
-    # Check file size
-    file_size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
-    if file_size_mb > MAX_FILE_SIZE_MB:
-        st.error(f"File size should be less than {MAX_FILE_SIZE_MB} MB.")
-    else:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-            tmp_file.write(uploaded_file.read())
-            tmp_file_path = tmp_file.name
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        tmp_file.write(uploaded_file.read())
+        tmp_file_path = tmp_file.name
 
-        document = extract_text_from_pdf(tmp_file_path)
+    document = extract_text_from_pdf(tmp_file_path)
 
-        if option == "Summarizer":
-            st.header("Summarized Content")
-            summarizer = load_summarizer()
-            summary = summarize_text(document, summarizer)
-            st.write(summary)
+    if option == "Summarizer":
+        st.header("Summarized Content")
+        summarizer = load_summarizer()
+        summary = summarize_text(document, summarizer)
+        st.write(summary)
+        
+        # Save summarized text as a new PDF
+        output_pdf_path = "summary_output.pdf"
+        create_summary_pdf(summary, output_pdf_path)
+        
+        # Provide a download link for the new PDF
+        with open(output_pdf_path, "rb") as f:
+            st.download_button("Download Summarized PDF", f, file_name=output_pdf_path, mime="application/pdf")
+    
+    elif option == "Translator":
+        st.header("Translate Document")
+        languages = {
+            "English": "en",
+            "Hindi": "hi",
+            "French": "fr",
+            "German": "de",
+            "Spanish": "es",
+            "Italian": "it",
+            "Portuguese": "pt",
+            "Russian": "ru",
+            "Chinese": "zh",
+            "Japanese": "ja",
+            "Arabic": "ar",
+            "Korean": "ko",
+            "Turkish": "tr",
+            "Dutch": "nl",
+            "Swedish": "sv",
+            "Polish": "pl",
+            "Vietnamese": "vi",
+            "Finnish": "fi",
+            "Norwegian": "no",
+            "Danish": "da",
+            "Czech": "cs",
+            "Greek": "el",
+            "Thai": "th",
+            "Romanian": "ro",
+            "Hungarian": "hu",
+            "Indonesian": "id",
+            "Hebrew": "he",
+        }
+
+        target_language = st.selectbox("Select target language", list(languages.keys()))
+        if st.button("Translate"):
+            target_lang_code = languages[target_language]
+            translator = load_translator()
+            translated_text = translate_text(document, target_lang_code, translator)
+            st.write(translated_text)
+
+            # Save translated text as a new text file
+            output_text_path = "translated_text.txt"
+            create_text_file(translated_text, output_text_path)
             
-            # Save summarized text as a new PDF
-            output_pdf_path = "summary_output.pdf"
-            create_summary_pdf(summary, output_pdf_path)
+            # Provide a download link for the translated text file
+            with open(output_text_path, "rb") as f:
+                st.download_button("Download Translated Text", f, file_name=output_text_path, mime="text/plain")
+    
+    elif option == "Question Answering Bot":
+        st.header("Question Answering Bot")
+        question = st.text_input("Ask a question about the document:")
+        if question:
+            qa_model = load_qa_model()
+            answer = answer_question(document, question, qa_model)
+            st.write(f"Answer: {answer}")
+    
+    elif option == "MCQ Generator":
+        st.header("MCQs Generated from the Document")
+        tokenizer, model = load_mcq_generator()
+        mcqs = generate_mcqs(document, tokenizer, model, num_questions=5)
+        if mcqs:
+            for mcq in mcqs:
+                st.write(f"Question: {mcq}")
+            
+            # Save MCQs as a new PDF
+            output_pdf_path = "mcq_output.pdf"
+            create_mcq_pdf(mcqs, output_pdf_path)
             
             # Provide a download link for the new PDF
             with open(output_pdf_path, "rb") as f:
-                st.download_button("Download Summarized PDF", f, file_name=output_pdf_path, mime="application/pdf")
-        
-        elif option == "Translator":
-            st.header("Translate Document")
-            languages = {
-                "English": "en", "Hindi": "hi", "French": "fr", "German": "de", "Spanish": "es",
-                "Italian": "it", "Portuguese": "pt", "Russian": "ru", "Chinese": "zh", "Japanese": "ja",
-                "Arabic": "ar", "Korean": "ko", "Turkish": "tr", "Dutch": "nl", "Swedish": "sv",
-                "Polish": "pl", "Vietnamese": "vi", "Finnish": "fi", "Norwegian": "no", "Danish": "da",
-                "Czech": "cs", "Greek": "el", "Thai": "th", "Romanian": "ro", "Hungarian": "hu",
-                "Indonesian": "id", "Hebrew": "he"
-            }
-
-            target_language = st.selectbox("Select target language", list(languages.keys()))
-            if st.button("Translate"):
-                target_lang_code = languages[target_language]
-                translator = load_translator()
-                translated_text = translate_text(document, target_lang_code, translator)
-                st.write(translated_text)
-
-                # Save translated text as a new text file
-                output_text_path = "translated_text.txt"
-                create_text_file(translated_text, output_text_path)
-                
-                # Provide a download link for the translated text file
-                with open(output_text_path, "rb") as f:
-                    st.download_button("Download Translated Text", f, file_name=output_text_path, mime="text/plain")
-        
-        elif option == "Question Answering Bot":
-            st.header("Question Answering Bot")
-            question = st.text_input("Ask a question about the document:")
-            if question:
-                qa_model = load_qa_model()
-                answer = answer_question(document, question, qa_model)
-                st.write(f"Answer: {answer}")
-        
-        elif option == "MCQ Generator":
-            st.header("MCQs Generated from the Document")
-            tokenizer, model = load_mcq_generator()
-            mcqs = generate_mcqs(document, tokenizer, model, num_questions=5)
-            if mcqs:
-                for mcq in mcqs:
-                    st.write(f"Question: {mcq}")
-                
-                # Save MCQs as a new PDF
-                output_pdf_path = "mcq_output.pdf"
-                create_mcq_pdf(mcqs, output_pdf_path)
-                
-                # Provide a download link for the new PDF
-                with open(output_pdf_path, "rb") as f:
-                    st.download_button("Download MCQ PDF", f, file_name=output_pdf_path, mime="application/pdf")
-            else:
-                st.write("No MCQs generated.")
+                st.download_button("Download MCQ PDF", f, file_name=output_pdf_path, mime="application/pdf")
+        else:
+            st.write("No MCQs generated.")
 else:
     st.info("Please upload a PDF file to proceed.")
 
