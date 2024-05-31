@@ -49,14 +49,14 @@ def answer_question(context, question, qa_model):
 @st.cache_resource
 def load_mcq_generator():
     model_name = "valhalla/t5-base-qa-qg-hl"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name,legacy=False)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     return tokenizer, model
 
 def generate_mcqs(text, tokenizer, model, num_questions=5):
     num_beams = max(num_questions, 5)  # Ensure num_beams is at least as large as num_questions
     input_text = f"generate questions: {text}"
-    inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)
+    inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True,legacy=False)
     outputs = model.generate(inputs, max_length=512, num_beams=num_beams, early_stopping=True, num_return_sequences=num_questions)
     
     questions = []
