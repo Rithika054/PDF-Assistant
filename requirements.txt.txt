@@ -5,3 +5,4 @@ torch
 sentencepiece
 deep-translator
 fpdf2
+fitz
