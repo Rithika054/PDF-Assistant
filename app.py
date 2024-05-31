@@ -1,6 +1,6 @@
 import streamlit as st
 import fitz  # PyMuPDF
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM,AutoModelForCausalLM
 from fpdf import FPDF
 import tempfile
 import os
