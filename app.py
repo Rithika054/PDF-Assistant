@@ -1,11 +1,15 @@
 import streamlit as st
 import fitz  # PyMuPDF
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
-from deep_translator import GoogleTranslator
 from fpdf import FPDF
 import tempfile
 import os
 from googletrans import Translator
+import warnings
+
+# Suppress specific warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 # Function to extract text from the PDF
 def extract_text_from_pdf(pdf_path):
     document = ""
@@ -45,7 +49,7 @@ def answer_question(context, question, qa_model):
 @st.cache_resource
 def load_mcq_generator():
     model_name = "valhalla/t5-base-qa-qg-hl"
-    tokenizer = AutoTokenizer.from_pretrained(model_name, legacy=False)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     return tokenizer, model
 
@@ -69,16 +73,19 @@ def create_summary_pdf(summary_text, output_path):
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, summary_text)
     pdf.output(output_path)
+
 # Function to create a text file with content
 def create_text_file(content, output_path):
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
+
 def create_pdf(content, output_path):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, content)
     pdf.output(output_path)
+
 def create_mcq_pdf(mcqs, output_path):
     pdf = FPDF()
     pdf.add_page()
@@ -92,10 +99,10 @@ def get_download_link(file_path, text):
         data = f.read()
     href = f'<a href="data:text/plain;charset=utf-8,{data}" download="{file_path}">{text}</a>'
     return href
+
 # Streamlit sidebar
 st.sidebar.title("PDF Processing App")
-option = st.sidebar.selectbox("Choose an option",
-                              ("Summarizer", "Translator", "Question Answering Bot", "MCQ Generator"))
+option = st.sidebar.selectbox("Choose an option", ("Summarizer", "Translator", "Question Answering Bot", "MCQ Generator"))
 
 uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
@@ -123,33 +130,12 @@ if uploaded_file:
     elif option == "Translator":
         st.header("Translate Document")
         languages = {
-            "English": "en",
-            "Hindi": "hi",
-            "French": "fr",
-            "German": "de",
-            "Spanish": "es",
-            "Italian": "it",
-            "Portuguese": "pt",
-            "Russian": "ru",
-            "Chinese": "zh",
-            "Japanese": "ja",
-            "Arabic": "ar",
-            "Korean": "ko",
-            "Turkish": "tr",
-            "Dutch": "nl",
-            "Swedish": "sv",
-            "Polish": "pl",
-            "Vietnamese": "vi",
-            "Finnish": "fi",
-            "Norwegian": "no",
-            "Danish": "da",
-            "Czech": "cs",
-            "Greek": "el",
-            "Thai": "th",
-            "Romanian": "ro",
-            "Hungarian": "hu",
-            "Indonesian": "id",
-            "Hebrew": "he",
+            "English": "en", "Hindi": "hi", "French": "fr", "German": "de", "Spanish": "es",
+            "Italian": "it", "Portuguese": "pt", "Russian": "ru", "Chinese": "zh", "Japanese": "ja",
+            "Arabic": "ar", "Korean": "ko", "Turkish": "tr", "Dutch": "nl", "Swedish": "sv",
+            "Polish": "pl", "Vietnamese": "vi", "Finnish": "fi", "Norwegian": "no", "Danish": "da",
+            "Czech": "cs", "Greek": "el", "Thai": "th", "Romanian": "ro", "Hungarian": "hu",
+            "Indonesian": "id", "Hebrew": "he"
         }
 
         target_language = st.selectbox("Select target language", list(languages.keys()))
@@ -192,6 +178,3 @@ if uploaded_file:
                 st.download_button("Download MCQ PDF", f, file_name=output_pdf_path, mime="application/pdf")
         else:
             st.write("No MCQs generated.")
-else:
-    st.info("Please upload a PDF file to proceed.")
-
