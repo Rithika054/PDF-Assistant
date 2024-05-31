@@ -1,0 +1,15 @@
+streamlit
+pymupdf
+transformers
+torch
+sentencepiece
+deep-translatorstreamlit
+PyMuPDF
+transformers
+deep-translator
+fpdf
+googletrans==4.0.0rc1
+torch
+sentencepiece
+fitz
+fpdf2
