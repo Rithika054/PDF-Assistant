@@ -61,7 +61,7 @@ def generate_mcqs(text, tokenizer, model, num_questions=5):
     
     questions = []
     for output in outputs:
-        decoded_output = tokenizer.decode(output, skip_special_tokens=True,,legacy=False)
+        decoded_output = tokenizer.decode(output, skip_special_tokens=True,legacy=False)
         questions.append(decoded_output)
 
     return questions
