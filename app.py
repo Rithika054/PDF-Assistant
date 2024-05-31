@@ -106,7 +106,7 @@ def get_download_link(file_path, text):
 st.sidebar.title("PDF Processing App")
 option = st.sidebar.selectbox("Choose an option", ("Summarizer", "Translator", "Question Answering Bot"))
 
-uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+uploaded_file = st.file_uploader("Upload a PDF file less than 12 MB", type=["pdf"])
 
 if uploaded_file:
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
