@@ -1,7 +1,7 @@
 import streamlit as st
 import fitz  # PyMuPDF
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-from fpdf import FPDF
+import pdfkit
 import tempfile
 import os
 from googletrans import Translator
@@ -68,13 +68,19 @@ def generate_mcqs(text, tokenizer, model, num_questions=5):
 
     return questions
 
-# Function to create a PDF with summarized content
+# Function to create a PDF with summarized content using pdfkit
 def create_summary_pdf(summary_text, output_path):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, summary_text)
-    pdf.output(output_path)
+    html_content = f"""
+    <html>
+    <head>
+    <meta charset="utf-8">
+    </head>
+    <body>
+    <p>{summary_text}</p>
+    </body>
+    </html>
+    """
+    pdfkit.from_string(html_content, output_path)
 
 # Function to create a text file with content
 def create_text_file(content, output_path):
@@ -82,19 +88,24 @@ def create_text_file(content, output_path):
         f.write(content)
 
 def create_pdf(content, output_path):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, content)
-    pdf.output(output_path)
+    html_content = f"""
+    <html>
+    <head>
+    <meta charset="utf-8">
+    </head>
+    <body>
+    <p>{content}</p>
+    </body>
+    </html>
+    """
+    pdfkit.from_string(html_content, output_path)
 
 def create_mcq_pdf(mcqs, output_path):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    html_content = "<html><head><meta charset='utf-8'></head><body>"
     for i, mcq in enumerate(mcqs, 1):
-        pdf.multi_cell(0, 10, f"Q{i}: {mcq}\n")
-    pdf.output(output_path)
+        html_content += f"<p>Q{i}: {mcq}</p>"
+    html_content += "</body></html>"
+    pdfkit.from_string(html_content, output_path)
 
 def get_download_link(file_path, text):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -204,6 +215,7 @@ if uploaded_file:
             st.write("No MCQs generated.")
 else:
     st.info("Please upload a PDF file to proceed.")
+
 
 # import streamlit as st
 # import fitz  # PyMuPDF
